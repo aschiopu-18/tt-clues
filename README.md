@@ -13,7 +13,9 @@ The team phone shows QR codes that open this page with a clue in the link
 Using another address? Put it in `"clueBaseUrl"` at the top of the objectives JSON.
 
 ## Link format
-`#v1|team|player|players|tokens` (URL-encoded). Tokens are joined with `.`, e.g. `S17`,
+`#v2|team|player|players|seed|tokens` (URL-encoded). The seed picks each player's emoji rebus
+from `REBUS` in index.html; solving it unlocks the clue. Old `v1|team|player|players|tokens`
+links (no rebus) still work. Tokens are joined with `.`, e.g. `S17`,
 `P13=9`, `X2=4`. A clue about the building is `Q<digit>~<base64url sentence>`. The sentences in
 `clueText()` must stay identical to `CluePuzzle.Clue.Text()` in the app.
 

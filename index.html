@@ -45,6 +45,23 @@
   .clues li + li { border-top: 1px solid var(--line); }
   .clues .place { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
   @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+  .rb-title { margin: 0 0 4px; font-weight: 700; font-size: 18px; }
+  .rb-sub { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+  .rb-pic { font-size: 54px; line-height: 1.2; text-align: center; padding: 14px 0 6px; letter-spacing: .04em; }
+  .rb-len { text-align: center; color: var(--muted); font-size: 14px; margin: 0 0 14px; letter-spacing: .12em; }
+  .rb-row { display: flex; gap: 8px; }
+  .rb-row input {
+    flex: 1; min-width: 0; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,0.08);
+    color: var(--ink); font: 650 20px/1 system-ui, sans-serif; padding: 14px; text-transform: uppercase; letter-spacing: .05em;
+  }
+  .rb-row input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .rb-row button { border: 0; border-radius: 12px; background: var(--accent); color: var(--accent-ink); font: 750 17px system-ui, sans-serif; padding: 0 18px; cursor: pointer; }
+  .rb-msg { min-height: 22px; margin: 10px 0 0; font-size: 15px; color: var(--muted); }
+  .rb-msg.bad { color: var(--no); }
+  .rb-give { background: none; border: 0; color: var(--muted); text-decoration: underline; font: inherit; font-size: 14px; padding: 6px 0 0; cursor: pointer; }
+  .shake { animation: shake .4s; }
+  @keyframes shake { 20%, 60% { transform: translateX(-7px); } 40%, 80% { transform: translateX(7px); } }
+  .solved { color: var(--yes); font-weight: 700; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; margin: 0 0 6px; }
   .hide { margin-top: 12px; background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 10px; padding: 8px 14px; font: inherit; font-size: 15px; cursor: pointer; }
   .tips { color: var(--muted); font-size: 15px; margin: 0; padding: 0; list-style: none; counter-reset: t; }
   .tips li { margin: 6px 0; padding-left: 32px; position: relative; }
@@ -94,6 +111,55 @@
     return new TextDecoder("utf-8").decode(bytes);
   }
 
+  // Emoji rebuses: each player solves one to unlock their clue. The app sends a random seed in
+  // the link; player p gets REBUS[(seed + p - 1) % REBUS.length], so teammates never share one.
+  // a = accepted answers (compared without spaces, hyphens or case).
+  var REBUS = [
+    { e: "🐝 + 🍃", a: ["belief"] },
+    { e: "☀️ + 👓", a: ["sunglasses"] },
+    { e: "🌧️ + 🏹", a: ["rainbow"] },
+    { e: "⭐ + 🐟", a: ["starfish"] },
+    { e: "🦶 + ⚽", a: ["football"] },
+    { e: "🐎 + 👞", a: ["horseshoe"] },
+    { e: "🧈 + 🪰", a: ["butterfly"] },
+    { e: "🌙 + 💡", a: ["moonlight"] },
+    { e: "🔑 + 🕳️", a: ["keyhole"] },
+    { e: "🌲 + 🍎", a: ["pineapple"] },
+    { e: "☕ + 🎂", a: ["cupcake"] },
+    { e: "🌊 + 🐎", a: ["seahorse"] },
+    { e: "❄️ + 👨", a: ["snowman"] },
+    { e: "🏠 + 🪰", a: ["housefly"] },
+    { e: "🐶 + 🏠", a: ["doghouse", "kennel"] },
+    { e: "📖 + 🐛", a: ["bookworm"] },
+    { e: "✋ + 👜", a: ["handbag"] },
+    { e: "🥚 + 🌱", a: ["eggplant"] },
+    { e: "🐉 + 🪰", a: ["dragonfly"] },
+    { e: "🔥 + 👨", a: ["fireman", "firefighter"] },
+    { e: "🦷 + 🖌️", a: ["toothbrush"] },
+    { e: "💧 + 🍈", a: ["watermelon"] },
+    { e: "🐱 + 🐟", a: ["catfish"] },
+    { e: "🥚 + 🐚", a: ["eggshell"] },
+    { e: "🦶 + 🖨️", a: ["footprint"] },
+    { e: "🚪 + 🔔", a: ["doorbell"] },
+    { e: "🌧️ + 🧥", a: ["raincoat"] },
+    { e: "⭐ + 💡", a: ["starlight"] },
+    { e: "🔥 + 🪰", a: ["firefly"] },
+    { e: "🍯 + 🌙", a: ["honeymoon"] },
+    { e: "🌳 + 🏠", a: ["treehouse"] },
+    { e: "📚 + 🏪", a: ["bookshop", "bookstore"] },
+    { e: "🧺 + ⚽", a: ["basketball"] },
+    { e: "🐄 + 👦", a: ["cowboy"] },
+    { e: "🌊 + 🐚", a: ["seashell"] },
+    { e: "🍳 + 🎂", a: ["pancake"] },
+    { e: "🐟 + 🥣", a: ["fishbowl"] },
+    { e: "🌧️ + 💧", a: ["raindrop"] },
+    { e: "💡 + 🏠", a: ["lighthouse"] },
+    { e: "🥜 + 🧈", a: ["peanutbutter"] },
+    { e: "🔥 + 🪵", a: ["firewood"] }
+  ];
+
+  function norm(s) { return String(s).toLowerCase().replace(/[^a-z]/g, ""); }
+
   // Same sentences as CluePuzzle.Clue.Text() in the app. Keep the two in sync.
   function clueText(t) {
     var m;
@@ -120,13 +186,23 @@
     var raw = location.hash.replace(/^#/, "");
     try { raw = decodeURIComponent(raw); } catch (e) { return null; }
     var parts = raw.split("|");
-    if (parts.length !== 5 || parts[0] !== "v1") return null;
+    // v1|team|player|players|tokens            (clue shown straight away)
+    // v2|team|player|players|seed|tokens       (solve a rebus first)
+    var v2 = parts.length === 6 && parts[0] === "v2";
+    if (!v2 && !(parts.length === 5 && parts[0] === "v1")) return null;
     var player = parseInt(parts[2], 10), players = parseInt(parts[3], 10);
     if (!(player >= 1 && players >= 2 && players <= 5 && player <= players)) return null;
-    var tokens = parts[4] ? parts[4].split(".") : [];
+    var rebus = null;
+    if (v2) {
+      var seed = parseInt(parts[4], 10);
+      if (!(seed >= 0)) return null;
+      rebus = REBUS[(seed + player - 1) % REBUS.length];
+    }
+    var tokenPart = parts[v2 ? 5 : 4];
+    var tokens = tokenPart ? tokenPart.split(".") : [];
     var clues = tokens.map(function (t) { var s = clueText(t); return s === null ? null : { text: s, place: t.charAt(0) === "Q" }; });
     if (!clues.length || clues.some(function (c) { return c === null; })) return null;
-    return { key: raw, team: parts[1] || "Your team", player: player, players: players, clues: clues };
+    return { key: raw, team: parts[1] || "Your team", player: player, players: players, clues: clues, rebus: rebus };
   }
 
   // Notepad state per puzzle link, so a reload or a locked screen doesn't wipe it.
@@ -135,6 +211,12 @@
     var a = []; for (var i = 0; i < 40; i++) a.push(0); return a;
   }
   function savePad(key, a) { try { sessionStorage.setItem("pad:" + key, JSON.stringify(a)); } catch (e) {} }
+
+  function loadRebus(key) {
+    try { var v = JSON.parse(sessionStorage.getItem("rebus:" + key)); if (v && typeof v.wrong === "number") return v; } catch (e) {}
+    return { solved: false, wrong: 0 };
+  }
+  function saveRebus(key, v) { try { sessionStorage.setItem("rebus:" + key, JSON.stringify(v)); } catch (e) {} }
 
   function renderError() {
     app.className = "error";
@@ -160,10 +242,11 @@
     app.innerHTML =
       '<div class="top"><div class="badge">' + LOCK + '</div><div><div class="brand">Tilburg Treasures · Split clues</div><h1>' + esc(d.team) + '</h1></div></div>' +
       '<div class="who">' + seats + '</div>' +
-      '<p class="who-label">You are player ' + d.player + ' of ' + d.players + '</p>' +
+      '<p class="who-label">You are player ' + d.player + ' of ' + d.players + (d.player === 1 ? " (the team phone)" : "") + '</p>' +
       '<div class="card" id="clueCard"></div>' +
       '<div class="card"><ol class="tips">' +
-        '<li><b>Say your clue' + plural + ' out loud.</b> Don’t show your screen.</li>' +
+        (d.rebus ? '<li><b>Solve your picture puzzle</b> to unlock your clue' + plural + '.</li>' : '') +
+        '<li><b>Read your clue' + plural + ' out loud</b> to the team.</li>' +
         '<li>Listen to everyone. Nobody can solve it alone.</li>' +
         '<li>Work out the 4-digit code and dial it on the team phone.</li>' +
       '</ol></div>' +
@@ -176,17 +259,41 @@
       '<p class="foot">Only on your phone. Nothing is sent anywhere.</p>';
 
     var card = document.getElementById("clueCard");
+    var st = loadRebus(d.key);
     function show() {
-      card.innerHTML = '<ul class="clues">' + d.clues.map(function (c) {
+      card.innerHTML = (d.rebus ? '<p class="solved">✓ ' + esc(d.rebus.a[0].toUpperCase()) + ' — clue' + plural + ' unlocked</p>' : '') +
+        '<ul class="clues">' + d.clues.map(function (c) {
         return "<li>" + (c.place ? '<span class="place">Look around you</span><br>' : "") + esc(c.text) + "</li>";
-      }).join("") + '</ul><button class="hide" id="hide">Hide</button>';
-      document.getElementById("hide").onclick = hide;
+      }).join("") + '</ul>';
     }
-    function hide() {
-      card.innerHTML = '<button class="reveal" id="reveal">Tap to see your clue' + plural + '<small>' + n + ' secret clue' + plural + ' for you</small></button>';
-      document.getElementById("reveal").onclick = show;
+    function puzzle() {
+      var len = norm(d.rebus.a[0]).length, first = d.rebus.a[0].charAt(0).toUpperCase();
+      card.innerHTML =
+        '<p class="rb-title">Unlock your clue' + plural + '</p>' +
+        '<p class="rb-sub">Which word do the pictures make?</p>' +
+        '<div class="rb-pic" aria-label="picture puzzle">' + d.rebus.e + '</div>' +
+        '<p class="rb-len">' + len + ' letters' + (st.wrong >= 2 ? ' · starts with ' + first : '') + '</p>' +
+        '<form class="rb-row" id="rbForm" autocomplete="off"><input id="rbIn" autocapitalize="characters" spellcheck="false" aria-label="Your answer" placeholder="Answer"><button>Check</button></form>' +
+        '<p class="rb-msg" id="rbMsg"></p>' +
+        (st.wrong >= 4 ? '<button class="rb-give" id="rbGive">Stuck? Show the answer</button>' : '');
+      var form = document.getElementById("rbForm"), input = document.getElementById("rbIn"), msg = document.getElementById("rbMsg");
+      form.onsubmit = function (ev) {
+        ev.preventDefault();
+        var g = norm(input.value);
+        if (!g) return;
+        if (d.rebus.a.some(function (a) { return norm(a) === g; })) { st.solved = true; saveRebus(d.key, st); show(); return; }
+        st.wrong++; saveRebus(d.key, st);
+        if (st.wrong === 2 || st.wrong === 4) { puzzle(); msg = document.getElementById("rbMsg"); input = document.getElementById("rbIn"); }
+        msg.textContent = "Not quite - try again.";
+        msg.className = "rb-msg bad";
+        form = document.getElementById("rbForm");
+        form.classList.remove("shake"); void form.offsetWidth; form.classList.add("shake");
+        input.select();
+      };
+      var give = document.getElementById("rbGive");
+      if (give) give.onclick = function () { st.solved = true; saveRebus(d.key, st); show(); };
     }
-    hide();
+    if (!d.rebus || st.solved) show(); else puzzle();
 
     var pad = loadPad(d.key);
     var cells = app.querySelectorAll(".cell");
